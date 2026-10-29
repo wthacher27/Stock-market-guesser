@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stock Market Guesser</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header class="top">
+    <div>
+      <h1>Stock Market Guesser</h1>
+      <p class="sub">Guess the S&amp;P 500's next close and take on ten machine-learning models.</p>
+    </div>
+    <nav class="tabs" role="tablist">
+      <button role="tab" data-tab="live" aria-selected="true">Live</button>
+      <button role="tab" data-tab="practice" aria-selected="false">Practice</button>
+      <button role="tab" data-tab="scoreboard" aria-selected="false">Scoreboard</button>
+      <button role="tab" data-tab="accuracy" aria-selected="false">Accuracy</button>
+      <button role="tab" data-tab="models" aria-selected="false">Models</button>
+    </nav>
+  </header>
+
+  <main>
+    <p id="loading" class="card muted">Loading market data and training models…</p>
+
+    <section id="tab-live" class="tab" hidden>
+      <article class="card" id="last-round" hidden></article>
+      <div class="grid">
+        <article class="card">
+          <h2>S&amp;P 500</h2>
+          <div class="hero">
+            <span id="last-close" class="hero-value"></span>
+            <span id="last-change"></span>
+          </div>
+          <p id="as-of" class="muted"></p>
+          <div class="chart"><canvas id="live-chart" aria-label="S&P 500 closing prices, last 120 trading days"></canvas></div>
+        </article>
+        <article class="card" id="call"></article>
+      </div>
+
+      <article class="card">
+        <h2 id="forecast-title">Forecasts</h2>
+        <div id="forecasts"></div>
+      </article>
+
+      <article class="card">
+        <h2>Past rounds</h2>
+        <p class="muted">Humanity is the median of every guess submitted for that day, so one wild guess can't drag it around.
+          Each entry shows the place it finished that day among everyone who played. The top five score points.</p>
+        <div id="history"></div>
+      </article>
+    </section>
+
+    <section id="tab-practice" class="tab" hidden>
+      <article class="card" id="practice"></article>
+    </section>
+
+    <section id="tab-scoreboard" class="tab" hidden>
+      <article class="card">
+        <div class="card-head">
+          <h2 id="scoreboard-title">Quarterly scoreboard</h2>
+          <label class="select">Quarter <select id="quarter"></select></label>
+        </div>
+        <p class="muted">Each trading day, the five entrants closest to the actual close score points: 1st 10, 2nd 7, 3rd 5,
+          4th 3, 5th 1. Ties share the better place. Points reset every quarter.</p>
+        <div class="leagues">
+          <div>
+            <h3>Humans vs bots</h3>
+            <p class="muted">Days at least one person guessed. <b>You</b> (your own guess) and <b>Humanity</b> (the median of
+              everyone's guesses) are separate entrants.</p>
+            <div id="main-league"></div>
+          </div>
+          <div>
+            <h3>Bot league</h3>
+            <p class="muted">Every trading day, bots only, whether or not anyone guessed.</p>
+            <div id="bot-league"></div>
+          </div>
+        </div>
+      </article>
+      <article class="card">
+        <h2>Head to head</h2>
+        <p class="muted">Each human's wins and losses against each bot. A win is a day the human finished closer to the actual
+          close. A third number counts ties.</p>
+        <div id="h2h"></div>
+      </article>
+    </section>
+
+    <section id="tab-accuracy" class="tab" hidden>
+      <article class="card">
+        <h2>Live track record</h2>
+        <p class="muted">Average accuracy over every finished round of the live game. <b>Avg miss</b> is how far the forecast
+          landed from the actual close, in index points. <b>Called direction</b> is how often it got up or down right.
+          Humanity only counts on days someone guessed, and You only on days you did.</p>
+        <div id="accuracy"></div>
+      </article>
+      <article class="card">
+        <h2>Backtest</h2>
+        <p id="backtest-intro" class="muted"></p>
+        <div id="backtest"></div>
+      </article>
+    </section>
+
+    <section id="tab-models" class="tab" hidden>
+      <article class="card">
+        <h2>The lineup</h2>
+        <div id="model-list"></div>
+      </article>
+      <article class="card prose">
+        <h2>How it works</h2>
+        <p>Each model predicts tomorrow's <b>percent return</b>, not the raw price. The forecast is today's close moved by that return.
+          Predicting returns stops a model from just memorizing that the index sits near 7,000.</p>
+        <p>The features are what's known at today's close: the last five daily returns, the distance from the 5, 10, 20, 50 and 200-day
+          moving averages, 10- and 30-day volatility, 14-day RSI, the day's high–low range, and volume relative to its 20-day average.</p>
+        <p>Every model's raw forecast is then <b>calibrated</b>. Each model holds back the most recent fifth of its training
+          data, checks how its forecasts did there, and learns how much to trust them. Untrustworthy forecasts get pulled
+          toward the market's typical small daily rise, but every model keeps at least a quarter of its own opinion, so the
+          bots don't all turn into the same guess. On the practice backtest this took the models beating No Change from
+          none of 8 to all 8.</p>
+        <p>Naive Bayes is a classifier, so it sorts days into five return buckets (big down … big up). Its forecast is each bucket's
+          average return, weighted by how likely the model thinks that bucket is.</p>
+        <p>The models retrain on every new close using all the saved data, back to 2005. Across five two-year test periods, that
+          beat training on only the last 5 or 10 years: short windows learned a calm market and got burned in 2022.
+          Each round's forecasts are frozen when the round opens.
+          You can't see them, or the other players' median, until you lock in your own guess.</p>
+        <p>Every visitor gets one guess per trading day, and every guess is saved. <b>Humanity</b>'s guess for the day is the
+          median of all of them, so a few deliberately terrible guesses can't move it. Humanity and your own guess
+          (<b>You</b>) compete as separate entrants against the bots.</p>
+        <p>Daily index moves are close to a coin flip, so the hard part is beating <b>No Change</b>. If a model beats it by even a
+          few percent over hundreds of days, that's doing well.</p>
+      </article>
+    </section>
+  </main>
+</body>
+</html>

@@ -1,0 +1,7 @@
+flask>=3.0
+gunicorn>=22.0
+numpy>=1.26
+pandas>=2.2
+scikit-learn>=1.4
+yfinance>=0.2.40
+tzdata
